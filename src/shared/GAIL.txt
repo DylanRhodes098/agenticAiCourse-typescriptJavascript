@@ -1,0 +1,51 @@
+G - Goals / Instructions
+A - Actions
+I - Infomration
+L - Language
+
+G - Goals / Instructions : What do you want it to do?
+    - Persona : Character of llm (eg customer centric approach)
+    - Rules : Things it can and can not do
+    - Process : Mandatory steps that need to be followed (eg step 1 -> X, step 2 -> Y)
+
+A - Actions : The llms ability to interact with the external enviornment to gather data and output an accurate reponse
+
+I - Infomration : Tools that decide the next action to ouput the most accuarte response
+    - Task : 
+    - History : Accumilation of previous actions and llm outputs 
+    - Inputs : User requests 
+    - Environment state : 
+
+L - Language : How do we want it to communicate with us?
+
+EXAMPLE
+
+GOAL - PERSONA
+You are Action Agent, a helpful Al assistant.
+
+GOAL - RULES
+Your goal is to accomplish the task given by the user.
+
+GOALS - PROCESS
+If you have enough information to directly respond to the user's request, you should do so. 
+If you need to complete tasks, you can use the provided tools to help you. 
+Whenever you are completely done with the task, 
+you should tell the user the result and terminate the conversation.
+
+ACTIONS / TOOLS
+The available tools are:
+...
+
+INFOMRATION 
+USER MESSAGE
+
+LANGUAGE 
+ALWAYS respond in the following format:
+<Stop and think step by step. Insert a rich description of your step by step thoughts here>
+
+```action
+{{
+"tool": "tool_name",
+"args": {{...fill in any required arguments here...}}
+}}
+

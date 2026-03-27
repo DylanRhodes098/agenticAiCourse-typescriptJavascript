@@ -1,110 +1,221 @@
-/**
- * Represents a complete prompt to send to an LLM.
- *
- * A Prompt combines:
- * - Messages: The conversation history
- * - Tools: Available functions the LLM can call (optional)
- * - Metadata: Additional configuration (optional)
- *
- * @example
- * ```typescript
- * // Simple prompt with just messages
- * const prompt = new Prompt([
- *   Message.system("You are helpful."),
- *   Message.user("Hello!")
- * ]);
- *
- * // Prompt with tools
- * const prompt = new Prompt(
- *   [Message.system("Use tools to help the user."), Message.user("List files")],
- *   [Tool.listFiles(), Tool.readFile(), Tool.terminate()]
- * );
- * ```
- */
+  // ============================================================================= //
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Represents the settings for the AI 
+// ─────────────────────────────────────────────────────────────────────────────
+
+// < - Messages = The conversation history, to provide better quality AI responses- > //
+
+// < - Tools = Expands AI responses to just text, see files in a directory, read file contents, search the internet, run a shell command- > //
+
+// < - Metadata = The AI settings - > //
+  // < - - - Temperature = Configures how creative the AI can be (0.0 → very deterministic, 0.5 → balanced, 1.0 → very creative) - - - > //
+  // < - - - maxToken = Configures the max word count - - - > //
+  // < - - - RequestID = An id on a user request (for debugging) - - - > //
+
+  // ============================================================================= //
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Import functions //
+// ─────────────────────────────────────────────────────────────────────────────
 import { Message } from './Message';
 import { Tool } from './Tool';
 
-/** Optional metadata for the prompt */
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Strcuture/Skeleton
+  // ─────────────────────────────────────────────────────────────────────────────
+
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ //
+// Define an interface function //
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ //
 export interface PromptMetadata {
-  /** Model temperature (0-2, lower = more deterministic) */
+
+  // temperature is optional, and has to be a number //
   temperature?: number;
-  /** Maximum tokens in response */
+
+  // maxToken is optional, and has to be a number //
   maxTokens?: number;
-  /** Custom identifier for tracking */
+
+  // requestid is optional, and has to be a string //
   requestId?: string;
 }
 
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ //
+// Define a prompt class //
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ //
 export class Prompt {
-  /**
-   * Creates a new Prompt.
-   * @param messages - The conversation messages
-   * @param tools - Available tools (empty array if none)
-   * @param metadata - Optional configuration
-   */
+
+  // ########################################################################### //
+  // Instructions //
+  // ########################################################################### //
   constructor(
+
+    // messages key can not be edited and is the Message import in an array // 
     public readonly messages: readonly Message[],
+
+      // tools key can not be edited and is the tool import in an array // 
+      // = [] means default value if nothing is provided //
     public readonly tools: readonly Tool[] = [],
+
+    // metadata key can not be edited and is the PromptMetadata object //  
+    // = {} means default value if nothing is provided //
     public readonly metadata: PromptMetadata = {}
   ) {}
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Builder Methods (return new instances)
+  // Prompt functions
   // ─────────────────────────────────────────────────────────────────────────────
 
-  /** Creates a new Prompt with an additional message */
-  withMessage(message: Message): Prompt {
-    return new Prompt([...this.messages, message], this.tools, this.metadata);
+  // ########################################################################### //
+  // withMessage function where message key = message value //
+  // ########################################################################### //
+  withMessage(message: Message): 
+
+  // Output equals prompt object //
+  Prompt {
+
+    // Create new prompt object Where... //
+    return new Prompt([
+
+      // message key = retrieve all message data and add new message onto it //
+      ...this.messages, message], 
+
+      // tool key = retreive current tools data //
+      this.tools, 
+
+      // metadata key = retreive current metadata data //
+      this.metadata);
   }
 
-  /** Creates a new Prompt with additional messages */
-  withMessages(messages: Message[]): Prompt {
-    return new Prompt([...this.messages, ...messages], this.tools, this.metadata);
+  // ########################################################################### //
+   // withMessages function where message key = all messages //
+  // ########################################################################### //
+  withMessages(messages: Message[]): 
+  
+   // Output equals prompt object //
+  Prompt {
+
+    
+    return new Prompt([
+
+      // message key = retrieve all message data and add all new message onto it //
+      ...this.messages, ...messages], 
+      this.tools, 
+      this.metadata);
   }
 
-  /** Creates a new Prompt with tools */
-  withTools(tools: Tool[]): Prompt {
-    return new Prompt(this.messages, tools, this.metadata);
+  // ########################################################################### //
+  // withTools function where tools key = all new tools //
+  // ########################################################################### //
+  withTools(tools: Tool[]): 
+  
+  Prompt {
+
+    return new Prompt(
+      this.messages, 
+      tools, 
+      this.metadata);
   }
 
-  /** Creates a new Prompt with updated metadata */
-  withMetadata(metadata: Partial<PromptMetadata>): Prompt {
-    return new Prompt(this.messages, this.tools, { ...this.metadata, ...metadata });
+  // ########################################################################### //
+    // withMetadata function where metaData key = Promptmetadata object //
+    // partial makes all key values optional //
+  // ########################################################################### //
+  withMetadata(metadata: Partial<PromptMetadata>): 
+
+  Prompt {
+
+    return new Prompt(
+      this.messages, 
+      this.tools, 
+
+      // meta data key = all meta data and all new metadata //
+      { ...this.metadata, ...metadata }
+    );
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Accessors
   // ─────────────────────────────────────────────────────────────────────────────
 
-  /** Returns true if this prompt has tools */
+  // ########################################################################### //
+  // checks if tools has data  //
+  // hastools function that is a boolean //
+  // ########################################################################### //
   hasTools(): boolean {
+
+    // returns yes if the tools are larger than 0 //
     return this.tools.length > 0;
   }
 
-  /** Returns the number of messages */
+  // ########################################################################### //
+  // messageCount that returns how many messages (back and forths with ai) there have been //
+  // ########################################################################### //
   get messageCount(): number {
     return this.messages.length;
   }
 
-  /** Returns the last message, or undefined if empty */
+  // ########################################################################### //
+  // lastMessage funciton that returns a mesage or undefined //
+  // ########################################################################### //
   get lastMessage(): Message | undefined {
-    return this.messages[this.messages.length - 1];
+
+    // get all new messages //
+    return this.messages[
+
+      // define the index as the message count number - 1//
+      // this returns the previosu message //
+      this.messages.length - 1
+    ];
+
+    // for example, messages = [a, b, c], this.message[1] = c //
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Factory Methods
   // ─────────────────────────────────────────────────────────────────────────────
 
-  /** Creates a simple prompt from a system message and user input */
-  static simple(systemPrompt: string, userInput: string): Prompt {
+  // ########################################################################### //
+  // a simple function with an object where... //
+  // ########################################################################### //
+  static simple(
+
+    // key = string //
+    systemPrompt: string, 
+
+    // key = string //
+    userInput: string): 
+    
+    // outputs a prompt object //
+    Prompt {
+
+      // create a new prompt //
     return new Prompt([
+
+      // messages key has a value of system key inside message object = systemprompt //
       Message.system(systemPrompt),
+
+      // tools key has a value of user key inside message object = userinput //
       Message.user(userInput),
     ]);
   }
 
-  /** Creates a prompt from just a user message */
-  static fromUser(userInput: string): Prompt {
-    return new Prompt([Message.user(userInput)]);
+  // ########################################################################### //
+  // a fromUser function with an object where... //
+  // ########################################################################### //
+  static fromUser(
+
+    // userINput = string//
+    userInput: string): 
+    
+    Prompt {
+
+      // create a new prompt object // 
+    return new Prompt([
+      
+      // user key in message object 
+      Message.user(userInput)
+    
+    ]);
   }
 }

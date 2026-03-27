@@ -1,3 +1,5 @@
+
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
 /**
  * Module 2: Function Calling
  *
@@ -12,30 +14,45 @@
  *
  * Run with: npm run module2:function-calling
  */
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
+// ============================================================================= //
+// Imports
+// ============================================================================= //
 
 import { loadEnv } from '../shared/env';
 import { Message, LLM, Tool, Prompt, Action } from '../shared';
 
-/**
- * Simple demonstration of function calling.
- *
- * We define tools with JSON schemas, and the LLM responds with
- * structured tool calls instead of free-form text.
- */
+// ============================================================================= //
+// Tool Functions
+// ============================================================================= //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Create tools function
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 async function basicFunctionCalling(): Promise<void> {
+
+  // ========================================== //
+// funciton calling basics title //
+// ========================================== //
   console.log('='.repeat(60));
   console.log('Module 2: Function Calling Basics');
   console.log('='.repeat(60));
 
   const llm = new LLM();
 
-  // Define available tools
+  // Define tools array //
   const tools = [
+
+      // ========================================== //
+// Current weather tool //
+// ========================================== //
     new Tool(
       'getCurrentWeather',
       'Get the current weather in a given location',
       {
         type: 'object',
+
+        // materials needed the location and unit //
         properties: {
           location: {
             type: 'string',
@@ -50,11 +67,17 @@ async function basicFunctionCalling(): Promise<void> {
         required: ['location'],
       }
     ),
+
+       // ========================================== //
+// search web tool //
+// ========================================== //
     new Tool(
       'searchWeb',
       'Search the web for information',
       {
         type: 'object',
+
+        // materials needed the what to seach? //
         properties: {
           query: {
             type: 'string',
@@ -66,22 +89,30 @@ async function basicFunctionCalling(): Promise<void> {
     ),
   ];
 
-  // Create a prompt with tools
+  // ========================================== //
+// Create prompt //
+// ========================================== //
   const prompt = new Prompt(
+
+    // message //
     [
       Message.system('You are a helpful assistant. Use tools when appropriate.'),
       Message.user("What's the weather like in Tokyo?"),
     ],
+
+    // tool //
     tools
   );
 
   console.log('\n📤 Sending prompt with tools...');
   console.log('   Tools:', tools.map(t => t.name).join(', '));
 
+
   const response = await llm.generate(prompt);
   console.log('\n📥 Raw response:', response);
 
   // Parse the function call
+  
   try {
     const action = Action.fromJSON(JSON.parse(response));
     console.log('\n✅ Parsed function call:');
@@ -92,16 +123,26 @@ async function basicFunctionCalling(): Promise<void> {
   }
 }
 
-/**
- * Demonstrates how the LLM chooses between multiple tools.
- */
+// ============================================================================= //
+// Backend Functions
+// ============================================================================= //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Shows how the llm can automate the right tools when needed //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Output nothing // 
 async function toolSelection(): Promise<void> {
+  
+    // ========================================== //
+// TOOL SELECTION DEMO //
+// ========================================== //
   console.log('\n' + '='.repeat(60));
   console.log('Tool Selection Demo');
   console.log('='.repeat(60));
 
+  // Create new chat //
   const llm = new LLM();
 
+  // deine tools //
   const tools = [
     Tool.listFiles('Lists all files in the current directory'),
     Tool.readFile('Reads the contents of a specific file'),
@@ -111,6 +152,8 @@ async function toolSelection(): Promise<void> {
       {
         type: 'object',
         properties: {
+
+          // define args for new tool //
           fileName: { type: 'string', description: 'Name of the file to write' },
           content: { type: 'string', description: 'Content to write' },
         },
@@ -120,55 +163,79 @@ async function toolSelection(): Promise<void> {
     Tool.terminate('Ends the conversation with a summary'),
   ];
 
-  // Different requests should trigger different tools
+  // User requests //
   const requests = [
     'What files are available?',
     'Can you read the package.json file?',
     'I\'m done, thanks for your help!',
   ];
 
+  // map through all user requests //
   for (const request of requests) {
     console.log(`\n👤 User: "${request}"`);
 
+    // create a new prompt where ... //
     const prompt = new Prompt(
+
       [
         Message.system('You are a file assistant. Use the appropriate tool for each request.'),
+
+        // it generates 3 responses due to there being 3 requetss in the user request array //
         Message.user(request),
       ],
+
       tools
     );
 
+    // define the reponse as the chat using the prompt //
     const response = await llm.generate(prompt);
 
     try {
-      const action = Action.fromJSON(JSON.parse(response));
+
+      // Use the fromJson function in actions which... //
+      // accepts the toolname and toolArgs object and... //
+      // outputs an Action object //
+
+      const action = Action.fromJSON(
+        
+        // json.parse converts json into a usable js object //
+        JSON.parse(response));
+
+        // Return the toolname and arguments //
       console.log(`🔧 Selected tool: ${action.toolName}`);
       console.log(`   Arguments: ${JSON.stringify(action.args)}`);
     } catch {
       console.log(`📝 Text response: ${response.substring(0, 100)}...`);
     }
-
     console.log('─'.repeat(40));
   }
 }
 
-/**
- * Shows the difference between function calling and text parsing.
- */
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Shows the difference between using the system vs using tools aswell //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 async function comparisonDemo(): Promise<void> {
+
+      // ========================================== //
+// FUNCTION CALLING VS TEXT PARSING //
+// ========================================== //
   console.log('\n' + '='.repeat(60));
   console.log('Comparison: Function Calling vs Text Parsing');
   console.log('='.repeat(60));
 
+  // create new chat //
   const llm = new LLM();
 
-  // Same request, but one uses function calling and one doesn't
+  // deifne userrequest //
   const userRequest = 'Read the file named "test.txt"';
 
-  // Method 1: Text-based (must parse markdown)
+   // ========================================== //
+// METHOD 1 //
+// ========================================== //
   console.log('\n📋 Method 1: Text-based response');
   console.log('─'.repeat(40));
 
+  // define prompt using system as the tool //
   const textPrompt = new Prompt([
     Message.system(
       'When asked to perform an action, respond with a JSON code block:\n' +
@@ -177,14 +244,19 @@ async function comparisonDemo(): Promise<void> {
     Message.user(userRequest),
   ]);
 
+  // define ai response using textprompt //
   const textResponse = await llm.generate(textPrompt);
   console.log('Response:\n', textResponse);
   console.log('\n⚠️  Requires parsing markdown blocks, can fail');
 
-  // Method 2: Function calling (structured)
+ // ========================================== //
+// METHOD 2 //
+// ========================================== //
   console.log('\n📋 Method 2: Function calling');
   console.log('─'.repeat(40));
 
+
+  // define prompt using a tool instead //
   const fcPrompt = new Prompt(
     [
       Message.system('You are a file assistant.'),
@@ -193,9 +265,11 @@ async function comparisonDemo(): Promise<void> {
     [Tool.readFile()]
   );
 
+  // create response using tool prompt //
   const fcResponse = await llm.generate(fcPrompt);
   console.log('Response:', fcResponse);
 
+  // Return response into a string //
   const action = Action.fromJSON(JSON.parse(fcResponse));
   console.log('\n✅ Structured output:');
   console.log('   Tool:', action.toolName);
@@ -203,10 +277,9 @@ async function comparisonDemo(): Promise<void> {
   console.log('\n✅ No parsing needed, guaranteed structure');
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Main Entry Point
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ============================================================================= //
+// Frontend Functions
+// ============================================================================= //
 async function main(): Promise<void> {
   loadEnv();
 

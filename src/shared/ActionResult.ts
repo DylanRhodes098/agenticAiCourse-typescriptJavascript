@@ -1,3 +1,5 @@
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
 /**
  * Represents the result of executing an action/tool.
  *
@@ -22,30 +24,43 @@
  * ```
  */
 
-/** Successful result with a value */
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
+// ─────────────────────────────────────────────────────────────────────────────
+// an object that geenrates a success message
+// ─────────────────────────────────────────────────────────────────────────────
 interface SuccessResult<T> {
   readonly success: true;
   readonly value: T;
 }
 
-/** Failed result with an error message */
+// ─────────────────────────────────────────────────────────────────────────────
+// an object that generates a error message
+// ─────────────────────────────────────────────────────────────────────────────
 interface ErrorResult {
   readonly success: false;
   readonly error: string;
 }
 
-/** Discriminated union of success and error results */
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// A function that outputs successresult or errorresult using T defined as unknown //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 export type ActionResult<T = unknown> = SuccessResult<T> | ErrorResult;
 
 /**
  * Factory functions for creating ActionResults.
  */
+
+// An object that ... //
 export const ActionResult = {
-  /**
-   * Creates a successful result.
-   * @param value - The result value
-   */
+
+  // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Success funcion
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+  // A function that inputs T, outputs either success or error //
   success<T>(value: T): ActionResult<T> {
+
+    // Returns success true and T //
     return { success: true, value };
   },
 
@@ -53,7 +68,14 @@ export const ActionResult = {
    * Creates an error result.
    * @param error - The error message
    */
+
+    // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Error funcion
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Inputs error string //
   error(error: string): ActionResult<never> {
+
+    // Returns success false and error //
     return { success: false, error };
   },
 
@@ -74,10 +96,28 @@ export const ActionResult = {
    * }
    * ```
    */
-  async fromPromise<T>(promise: Promise<T>): Promise<ActionResult<T>> {
+
+  // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// async function called fromPromise and T //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// This stops bugs, catches anything that isnt recognised as success or error //
+  async fromPromise<T>
+  
+  // Inputs T //
+  (promise: Promise<T>): 
+  
+  // Outputs success or error //
+  Promise<ActionResult<T>> {
+
     try {
+
+      // Define value as T //
       const value = await promise;
+
+      // Return an object of true and T //
       return { success: true, value };
+
+       // else retrurn an error //
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return { success: false, error: message };
@@ -89,6 +129,10 @@ export const ActionResult = {
    * @param fn - The function to execute
    * @returns ActionResult with either the return value or error message
    */
+
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// 
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   fromTry<T>(fn: () => T): ActionResult<T> {
     try {
       const value = fn();

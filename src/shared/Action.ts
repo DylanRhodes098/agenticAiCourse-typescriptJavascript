@@ -1,3 +1,5 @@
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
 /**
  * Represents an action (tool invocation) that an AI agent wants to perform.
  *
@@ -19,9 +21,22 @@
  * ```
  */
 
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
 /** Arguments passed to a tool - a record of string keys to unknown values */
+
+// ============================================================================= //
+// Action Skeleton
+// ============================================================================= //
+
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Define the tool properties ( materials )
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 export type ToolArgs = Record<string, unknown>;
 
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// The action with the tool name and the materials //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 export class Action {
   /**
    * Creates a new Action.
@@ -56,14 +71,37 @@ export class Action {
    * const count = action.getArg("count", (v): v is number => typeof v === "number");
    * ```
    */
-  getArg<T>(name: string, validator?: (value: unknown) => value is T): T | undefined {
+
+  // ============================================================================= //
+  // Primary Functions
+  // ============================================================================= //
+
+  // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Get the arguemnt / material in a desired tool, if there is one //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// A function where the output is T, with parameter name : string and... // 
+  getArg<T>(name: string, 
+
+    // a function with parameters value : unkown, where value is T... //
+    validator?: (value: unknown) => value is T)
+
+    // The output is a boolean either T or undefined //
+    : T | undefined {
+      
+      // define value as the name value in the args object //
     const value = this.args[name];
+
+     // if the args name is undefined, return undefined // 
     if (value === undefined) return undefined;
 
+         // if validator exists // 
     if (validator) {
+
+      // return the value else return undefined //
       return validator(value) ? value : undefined;
     }
 
+    // Return T //
     return value as T;
   }
 
@@ -71,17 +109,31 @@ export class Action {
    * Gets a required argument, throwing if not present.
    * @throws Error if argument is missing
    */
-  requireArg<T>(name: string, validator?: (value: unknown) => value is T): T {
+
+    // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Get the arguemnt / material in a desired tool, but there has to be one //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+  requireArg<T>(name: string, validator?: (value: unknown) => value is T): T 
+  
+  {
+
+    // define value as the name and validator in getArg value //
     const value = this.getArg<T>(name, validator);
+
+        // if value is undefined //
     if (value === undefined) {
+
+       // return an error //
       throw new Error(`Missing required argument: ${name}`);
     }
+
+    // else return the argument //
     return value;
   }
 
-  /**
-   * Checks if this action is a termination action.
-   */
+  // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Check if the action is a temrinartion
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   isTerminate(): boolean {
     return this.toolName === 'terminate';
   }
@@ -89,27 +141,36 @@ export class Action {
   /**
    * Checks if this action is an error action.
    */
+    // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Check if the action is an error
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   isError(): boolean {
     return this.toolName === 'error';
   }
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Factory Methods
-  // ─────────────────────────────────────────────────────────────────────────────
-
+  // ============================================================================= //
+  // Subfunctions //
+  // ============================================================================= //
+  
+      // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Terminate action
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   /** Creates a termination action */
   static terminate(message: string): Action {
     return new Action('terminate', { message });
   }
 
+      // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Error action
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   /** Creates an error action */
   static error(message: string): Action {
     return new Action('error', { message });
   }
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  // ============================================================================= //
   // Serialization
-  // ─────────────────────────────────────────────────────────────────────────────
+  // ============================================================================= //
 
   /** Converts to a plain object */
   toJSON(): { tool: string; args: ToolArgs } {

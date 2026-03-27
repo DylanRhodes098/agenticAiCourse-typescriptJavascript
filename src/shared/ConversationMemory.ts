@@ -1,3 +1,5 @@
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
 /**
  * Typed Conversation Memory
  *
@@ -24,25 +26,29 @@
  * ```
  */
 
+// ========================================== //
+// Types //
+// ========================================== //
+
+// Envionment = the outside/external place the ai needs to execute thr action in // 
+
+
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
 import { Message } from './Message';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────────────────────
+// ============================================================================= //
+// Memory Object //
+// ============================================================================= //
 
-/**
- * Types of memory items in a conversation.
- *
- * - user: Messages from the user
- * - assistant: Messages from the AI assistant (including tool calls)
- * - environment: Results from tool execution
- * - system: System-level instructions (rarely stored in memory)
- */
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// A type that defines memoryitems as 1 of 4 things, including enviroment //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 export type MemoryItemType = 'user' | 'assistant' | 'environment' | 'system';
 
-/**
- * A single item in conversation memory.
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// The memory item object, including the memoeryitemtype strings 
+// ─────────────────────────────────────────────────────────────────────────────
 export interface MemoryItem {
   /** The type of this memory item */
   type: MemoryItemType;
@@ -57,30 +63,23 @@ export interface MemoryItem {
   metadata?: Record<string, unknown>;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ConversationMemory Class
-// ─────────────────────────────────────────────────────────────────────────────
+// ============================================================================= //
+// The memoryItem Modification //
+// ============================================================================= //
 
-/**
- * Manages typed conversation history for an agent.
- *
- * This is distinct from the key-value Memory class. ConversationMemory
- * specifically tracks the flow of a conversation with typed entries.
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// Class with key = items, value = memoryItem array
+// ─────────────────────────────────────────────────────────────────────────────
 export class ConversationMemory {
   private items: MemoryItem[] = [];
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Adding Items
-  // ─────────────────────────────────────────────────────────────────────────────
+// ========================================== //
+// Adding Items //
+// ========================================== //
 
-  /**
-   * Adds an item to memory.
-   *
-   * @param type - Type of the memory item
-   * @param content - Content string
-   * @param metadata - Optional metadata
-   */
+  // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Add item subFunction
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   add(type: MemoryItemType, content: string, metadata?: Record<string, unknown>): this {
     this.items.push({
       type,
@@ -91,43 +90,41 @@ export class ConversationMemory {
     return this;
   }
 
-  /**
-   * Adds a user message.
-   */
+    // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Add userMessage subFunction
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   addUser(content: string): this {
     return this.add('user', content);
   }
 
-  /**
-   * Adds an assistant message.
-   */
+    // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Add AssistantResponse subFunction
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   addAssistant(content: string): this {
     return this.add('assistant', content);
   }
 
-  /**
-   * Adds an environment result.
-   */
+      // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Add Environment subFunction
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   addEnvironment(content: string): this {
     return this.add('environment', content);
   }
 
-  /**
-   * Adds a system message.
-   */
+    // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Add systemPrompt subFunction
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   addSystem(content: string): this {
     return this.add('system', content);
   }
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Retrieving Items
-  // ─────────────────────────────────────────────────────────────────────────────
+  // ========================================== //
+// GET Items //
+// ========================================== //
 
-  /**
-   * Gets all items, optionally limited to the most recent N items.
-   *
-   * @param limit - Maximum number of items to return (from the end)
-   */
+  // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// GET All items in the current Memoryitem Array
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   getItems(limit?: number): MemoryItem[] {
     if (limit === undefined) {
       return [...this.items];
@@ -135,59 +132,59 @@ export class ConversationMemory {
     return this.items.slice(-limit);
   }
 
-  /**
-   * Gets the last N items.
-   */
+ // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// GET a custom amount of most recent items in the current Memoryitem Array
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   getLast(n: number): MemoryItem[] {
     return this.items.slice(-n);
   }
 
-  /**
-   * Gets items of a specific type.
-   */
+ // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// GET all items of a specific type in the current Memoryitem Array
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   getByType(type: MemoryItemType): MemoryItem[] {
     return this.items.filter(item => item.type === type);
   }
 
-  /**
-   * Gets the most recent item.
-   */
+ // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// GET the most recent item in the current Memoryitem Array
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   getLatest(): MemoryItem | undefined {
     return this.items[this.items.length - 1];
   }
 
-  /**
-   * Gets the number of items in memory.
-   */
+ // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// GET the amount of items in the current Memoryitem Array
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   get length(): number {
     return this.items.length;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Filtering & Copying
-  // ─────────────────────────────────────────────────────────────────────────────
+    // ========================================== //
+// DUPLICATE MemoryItems Array //
+// ========================================== //
 
-  /**
-   * Creates a copy of this memory without system items.
-   */
+ // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// COPY the Memoryitem Array wihtout system prompts 
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   copyWithoutSystem(): ConversationMemory {
     const memory = new ConversationMemory();
     memory.items = this.items.filter(m => m.type !== 'system');
     return memory;
   }
 
-  /**
-   * Creates a deep copy of this memory.
-   */
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// COPY the Memoryitem Array fully
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   copy(): ConversationMemory {
     const memory = new ConversationMemory();
     memory.items = this.items.map(item => ({ ...item }));
     return memory;
   }
 
-  /**
-   * Clears all items from memory.
-   */
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// RESET MemoryItems
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   clear(): this {
     this.items = [];
     return this;
@@ -206,19 +203,32 @@ export class ConversationMemory {
    * - environment → user (tool results are sent as user messages)
    * - system → system
    */
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// A function that defines each item in the memoryItem to the LLM equivelant,, so the LLM can read succesfully. 
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   toMessages(): Message[] {
     return this.items.map(item => {
       switch (item.type) {
+
+        //  - user → user
         case 'user':
           return Message.user(item.content);
+
+          //- assistant → assistant
         case 'assistant':
           return Message.assistant(item.content);
+
+          // environment → user (tool results are sent as user messages)
         case 'environment':
           // Environment results are typically sent as user messages
           // (the "user" here is the environment responding to the assistant)
           return Message.user(item.content);
+
+          // - system → system
         case 'system':
           return Message.system(item.content);
+
+          // If nothign is parsed, default to userMessage
         default:
           return Message.user(item.content);
       }
@@ -230,7 +240,15 @@ export class ConversationMemory {
    *
    * This allows custom mapping of item types to roles.
    */
+
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Convert MemoryItem object into a message array for the LLM to read /
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// where the value for key mapping defines memeoryitemtype as an object, with each string as an optional key value //
+// Outputs the message aray //
   toMessagesWithMapping(mapping: Partial<Record<MemoryItemType, 'user' | 'assistant' | 'system'>>): Message[] {
+
+    // define defualtmapping as MemoryItemType as an object, with 3 key values = user :, assistant :, system : //
     const defaultMapping: Record<MemoryItemType, 'user' | 'assistant' | 'system'> = {
       user: 'user',
       assistant: 'assistant',
@@ -238,21 +256,30 @@ export class ConversationMemory {
       system: 'system',
     };
 
+    // Define finalmapping as joining both objects together //
     const finalMapping = { ...defaultMapping, ...mapping };
 
     return this.items.map(item => {
+
+      // Define the role in the object above //
       const role = finalMapping[item.type];
+
+      // Return a new mesage array with the newly defined role and its content //
       return new Message(role, item.content);
     });
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Serialization
+  // Serialization Functions
   // ─────────────────────────────────────────────────────────────────────────────
 
   /**
    * Converts to a plain object for JSON serialization.
    */
+
+  // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Converts a plain object into JSON. 
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   toJSON(): MemoryItem[] {
     return this.items.map(item => ({
       type: item.type,
@@ -265,6 +292,10 @@ export class ConversationMemory {
   /**
    * Creates a ConversationMemory from a JSON array.
    */
+
+   // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Converts JSON into an object //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   static fromJSON(items: MemoryItem[]): ConversationMemory {
     const memory = new ConversationMemory();
     memory.items = items.map(item => ({
@@ -276,16 +307,29 @@ export class ConversationMemory {
     return memory;
   }
 
-  /**
-   * Returns a string representation for debugging.
-   */
+ // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Return an error if the object/json is empty 
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   toString(): string {
     if (this.items.length === 0) {
       return '(empty)';
     }
 
+     // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Return the object or json into a string with... 
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
     return this.items
-      .map(item => `[${item.type}] ${item.content.substring(0, 50)}${item.content.length > 50 ? '...' : ''}`)
+
+    // Type of item
+      .map(item => `[${item.type}] 
+
+         // the first 50 lettters of content 
+        ${item.content.substring(0, 50)}
+
+        // a ... or empty strnig if content is greater than 50 //
+        ${item.content.length > 50 ? '...' : ''}`)
+
+        // put an /n on the end //
       .join('\n');
   }
 }

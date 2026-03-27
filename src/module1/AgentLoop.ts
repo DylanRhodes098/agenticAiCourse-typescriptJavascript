@@ -1,3 +1,9 @@
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
+// ========================================== //
+// Memory Manipulation SubFunctions //
+// ========================================== //
+
 /**
  * Module 1: The Agent Loop - Text Parsing Agent
  *
@@ -33,22 +39,46 @@
  * - Zod-based tool registration (Module 4)
  *
  * Run with: npm run module1:agent
+ * 
+ * 1. Construct Prompt: Combine the agent’s memory, user input, and system rules into a single prompt. This ensures the LLM has all the context it needs to decide on the next action, maintaining continuity across iterations.
+
+2. Generate Response: Send the constructed prompt to the LLM and retrieve a response. This response will guide the agent’s next step by providing instructions in a structured format.
+
+3. Parse Response: Extract the intended action and its parameters from the LLM’s output. The response must adhere to a predefined structure (e.g., JSON format) to ensure it can be interpreted correctly.
+
+4. Execute Action: Use the extracted action and its parameters to perform the requested task with the appropriate tool. This could involve listing files, reading content, or printing a message.
+
+5. Convert Result to String: Format the result of the executed action into a string. This allows the agent to store the result in its memory and provide clear feedback to the user or itself.
+
+6. Continue Loop?: Evaluate whether the loop should continue based on the current action and results. The loop may terminate if a “terminate” action is specified or if the agent has completed the task.
  */
 
+// ============================================================================= //
+// Imports //
+// ============================================================================= //
+
+// ========================================== //
+// Import Functions //
+// ========================================== //
 import { loadEnv } from '../shared/env';
 import { Message, LLM } from '../shared';
 import { ConversationMemory } from '../shared/ConversationMemory';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ============================================================================= //
+// Action Objects
+// ============================================================================= //
 /**
  * A parsed action from text-based LLM responses.
  *
  * In text-parsing agents, the LLM outputs structured JSON inside
  * markdown code blocks that we parse to determine what to do.
  */
+
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Action Input interface 
+// ─────────────────────────────────────────────────────────────────────────────
 export interface TextParsedAction {
   /** Name of the tool to invoke */
   toolName: string;
@@ -57,9 +87,10 @@ export interface TextParsedAction {
   args: Record<string, unknown>;
 }
 
-/**
- * Result from executing an action.
- */
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Action Output interface 
+// ─────────────────────────────────────────────────────────────────────────────
 export interface ActionExecutionResult {
   /** Whether execution was successful */
   success: boolean;
@@ -71,23 +102,11 @@ export interface ActionExecutionResult {
   error?: string;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Constants
-// ─────────────────────────────────────────────────────────────────────────────
-
 /** Maximum iterations to prevent infinite loops */
 const MAX_ITERATIONS = 10;
 
 /**
  * The system prompt that defines the agent's behavior.
- *
- * Key elements:
- * 1. Defines available tools with their signatures
- * 2. Specifies the EXACT output format (```action blocks)
- * 3. Instructs when to use the terminate tool
- *
- * This is a TEXT-PARSING agent - it doesn't use OpenAI's function calling.
- * Instead, we ask the LLM to output JSON in a specific format that we parse.
  */
 const AGENT_RULES = `You are an agent that can perform tasks using tools.
 
@@ -126,22 +145,22 @@ To finish:
 \`\`\`
 `;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Tool Implementations
-// ─────────────────────────────────────────────────────────────────────────────
+// ============================================================================= //
+// Tools
+// ============================================================================= //
 
-/**
- * Simple tool implementations for the text-parsing agent.
- *
- * In later modules, we'll use Zod-based tool definitions.
- * Here we keep it simple to focus on the agent loop pattern.
- */
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Tool subFunctions
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+
+// Return string message //
 const tools = {
   printMessage(message: string): string {
     console.log(`📢 ${message}`);
     return 'Message printed';
   },
 
+  // retrn list of file sin current directory //
   listFiles(): string[] {
     const fs = require('fs');
     const files = fs.readdirSync('.');
@@ -149,6 +168,7 @@ const tools = {
     return files;
   },
 
+  // Return content within a given file //
   readFile(fileName: string): string {
     const fs = require('fs');
     try {
@@ -166,30 +186,21 @@ const tools = {
   },
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Action Parsing
-// ─────────────────────────────────────────────────────────────────────────────
+// ============================================================================= //
+// Action subFunctions 
+// ============================================================================= //
 
-/**
- * Parses an action from the LLM's text response.
- *
- * This is the KEY function for text-parsing agents. It:
- * 1. Finds the ```action code block
- * 2. Extracts the JSON content
- * 3. Parses it into a structured action
- *
- * If parsing fails, we return a terminate action with the raw response.
- * This graceful degradation prevents the agent from getting stuck.
- *
- * @param response - The raw LLM response text
- * @returns Parsed action with tool name and arguments
- */
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Function that reads and generates action input 
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 export function parseTextAction(response: string): TextParsedAction {
   const startMarker = '```action';
   const endMarker = '```';
 
+  // finds where action is in the response and outputs a number where it is in the string //
   const startIndex = response.indexOf(startMarker);
 
+  // if there isnt an action //
   if (startIndex === -1) {
     // No action block found - gracefully degrade to terminate
     console.log('⚠️  No ```action block found, treating as terminate');
@@ -199,9 +210,13 @@ export function parseTextAction(response: string): TextParsedAction {
     };
   }
 
+  // else Measure where the action prompt starts //
   const contentStart = startIndex + startMarker.length;
+
+  // Measure where the action prompt ends //
   const endIndex = response.indexOf(endMarker, contentStart);
 
+  //If the action doesnt end //
   if (endIndex === -1) {
     console.log('⚠️  Unclosed ```action block, treating as terminate');
     return {
@@ -210,22 +225,29 @@ export function parseTextAction(response: string): TextParsedAction {
     };
   }
 
+  // else read the action //
   const jsonStr = response.substring(contentStart, endIndex).trim();
 
   try {
+
+    // Transfrom string into json //
     const parsed = JSON.parse(jsonStr);
 
     // Support both toolName and tool_name formats
     const toolName = parsed.toolName ?? parsed.tool_name ?? parsed.tool;
 
+    // if there isnt a tool name idnetified //
     if (!toolName) {
       throw new Error('Missing tool name in action');
     }
 
+    // return the toolname and required materials for the tool //
     return {
       toolName,
       args: parsed.args ?? {},
     };
+
+    // throw error //
   } catch (error) {
     console.log(`⚠️  Failed to parse action JSON: ${error}`);
     return {
@@ -235,32 +257,37 @@ export function parseTextAction(response: string): TextParsedAction {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Action Execution
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Executes a parsed action.
- *
- * @param action - The action to execute
- * @returns Execution result with success/error status
- */
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Function that generates action output
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 export function executeTextAction(action: TextParsedAction): ActionExecutionResult {
   console.log(`\n🔧 Executing: ${action.toolName}`, JSON.stringify(action.args));
 
   try {
+
+    // if there is a tool name //
     switch (action.toolName) {
+
+ // if the tool name is printmessage //
       case 'printMessage': {
+
+        // define tool argeuments/materials as a string //
         const message = action.args.message as string;
+
+        // Use printMessage function to return agruments in tool //
         const result = tools.printMessage(message);
+
+        // return a success bvoolean followed by the arguments //
         return { success: true, result };
       }
 
+       // if the tool name is lisfiles //
       case 'listFiles': {
         const result = tools.listFiles();
         return { success: true, result };
       }
 
+      // if the tool name is readfiles //
       case 'readFile': {
         const fileName = action.args.fileName as string;
         if (!fileName) {
@@ -270,12 +297,14 @@ export function executeTextAction(action: TextParsedAction): ActionExecutionResu
         return { success: true, result };
       }
 
+      // if the tool name is terminate //
       case 'terminate': {
         const message = action.args.message as string;
         const result = tools.terminate(message);
         return { success: true, result };
       }
 
+      // if none of the above, default to error message //
       default: {
         return {
           success: false,
@@ -283,82 +312,107 @@ export function executeTextAction(action: TextParsedAction): ActionExecutionResu
         };
       }
     }
+
+    // throw error //
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { success: false, error: message };
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Agent Loop
-// ─────────────────────────────────────────────────────────────────────────────
+// ============================================================================= //
+// The LLM Function
+// ============================================================================= //
 
-/**
- * Runs the text-parsing agent loop.
- *
- * This is the CORE pattern that all agents follow:
- * 1. Build prompt from rules + memory
- * 2. Get LLM response
- * 3. Parse action from text
- * 4. Execute action
- * 5. Update memory
- * 6. Check termination, repeat if needed
- *
- * @param userInput - The user's task/request
- * @param llm - The LLM instance
- * @param maxIterations - Maximum loop iterations
- * @returns The final conversation memory
- */
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// A function that executes a functioning LLM with actions //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 export async function runTextParsingAgentLoop(
+
+  // Paramteres are user request, the LLM file and 10 iterations //
   userInput: string,
   llm: LLM,
   maxIterations = MAX_ITERATIONS
-): Promise<ConversationMemory> {
+)
+
+// Final value will be the conversationMmeory object including... //
+// memoryitem array, all the functions to add, get and delete tools //
+: Promise<ConversationMemory> {
   console.log('\n' + '='.repeat(60));
   console.log('Text-Parsing Agent Loop');
   console.log('='.repeat(60));
   console.log(`\n📋 User Request: ${userInput}`);
 
-  // Initialize memory
+  // Create a new memory for llm //
   const memory = new ConversationMemory();
+
+  // uses addUser (userMessage) function, applying the current user request //
   memory.addUser(userInput);
 
+  // define iterations as 0 //
   let iterations = 0;
 
-  // THE AGENT LOOP
+  // ========================================== //
+  // THE AGENT LOOP //
+  // ========================================== //
+
+  // If maxIterations is larger than 0 // 
   while (iterations < maxIterations) {
     console.log(`\n${'─'.repeat(40)}`);
+
+    // log the amount of user equests there have been as 1 / X //
     console.log(`Iteration ${iterations + 1}/${maxIterations}`);
     console.log('─'.repeat(40));
 
-    // Step 1: Build prompt from rules + memory
-    // The rules define the agent's behavior and available tools
-    // Memory provides context from previous iterations
+    // ========================================== //
+    // Step 1: Build llm memory using previous iteraitons/messages 
+    // ========================================== //
+
+    // Create a new message array with... //
     const messages: Message[] = [
+
+      // an array with the system as the defined agent rules //
       Message.system(AGENT_RULES),
+
+      // all of the previous messages in the current llm memory //
       ...memory.toMessages(),
     ];
 
+    // ========================================== //
     // Step 2: Get LLM response
+    // ========================================== //
     console.log('\n📤 Sending prompt to LLM...');
+
+    // Generate a string that can be used as a LLM response //
     const response = await llm.generate(messages);
     console.log('\n📥 LLM Response:');
     console.log(response.substring(0, 300) + (response.length > 300 ? '...' : ''));
 
-    // Step 3: Parse action from text
-    // This is what makes it a TEXT-PARSING agent
+    // ========================================== //
+    // Step 3: Use response to read and generate the action 
+    // ========================================== //
+    // Read and generate the action using the LLM response //
     const action = parseTextAction(response);
     console.log(`\n🎯 Parsed Action: ${action.toolName}`, action.args);
 
-    // Step 4: Execute action
+    // ========================================== //
+    // Step 4: Execute action //
+    // ========================================== //
+    // Execute action using action defintion //
     const result = executeTextAction(action);
     console.log('📊 Result:', JSON.stringify(result).substring(0, 200));
 
+    // ========================================== //
     // Step 5: Update memory
+    // ========================================== //
+    // Use ConversationMemory actions to update llm memory //
     memory.addAssistant(response);
     memory.addEnvironment(JSON.stringify(result));
 
+    // ========================================== //
     // Step 6: Check termination
+    // ========================================== //
+    // if the action is to temrinate the llm //
     if (action.toolName === 'terminate') {
       console.log('\n✅ Agent terminated');
       break;
@@ -367,23 +421,21 @@ export async function runTextParsingAgentLoop(
     iterations++;
   }
 
+  // if iterations more than or equal to 10 //
   if (iterations >= maxIterations) {
     console.log('\n⚠️  Maximum iterations reached');
   }
 
+  // ========================================== //
+  // Step 7: sucessfully return memory //
+  // ========================================== //
+  // else return the llms memory //
   return memory;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Alternative: Simple Procedural Version
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * A minimal procedural version of the agent loop.
- *
- * This matches the Python version more closely - no classes,
- * just simple functions and a while loop.
- */
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// An alterative LLM funciton that outputs a similar result but a simpler version 
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 export async function runSimpleAgentLoop(
   userInput: string,
   llm: LLM
@@ -429,10 +481,13 @@ export async function runSimpleAgentLoop(
   return memory;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Main Entry Point
-// ─────────────────────────────────────────────────────────────────────────────
+// ============================================================================= //
+// Frontend Function 
+// ============================================================================= //
 
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+  // An async function that Runs all functions defined above //
+  // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 async function main(): Promise<void> {
   loadEnv();
 
@@ -440,6 +495,7 @@ async function main(): Promise<void> {
     const llm = new LLM();
 
     // Example task
+    // This is why the ai executed the listfiles, readfiles, printm,essage and terminate actions in the console when you run the code //
     const userRequest =
       'What files are in this directory? Please read the package.json ' +
       'file and tell me about this project.';
