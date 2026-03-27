@@ -1,3 +1,17 @@
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
+// ========================================== //
+// Utility Functions //
+// ========================================== //
+
+// The two codeblock functions are tools to seperate code (that uses markedown) the ai generated, with normal ai chat (that uses string) //
+// for example = string "Hi Dylan, here's the code you requested". codeBlock ``Àsync functio hi() => X ... ```//
+
+// ========================================== //
+// QuasiAgent Class
+// ========================================== //
+
+// The class in this file has the ability to store chat history //
 /**
  * Module 1: Quasi-Agent - Iterative Function Builder
  *
@@ -18,100 +32,158 @@
  * Run with: npm run module1:quasi
  */
 
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
+// ============================================================================= //
+// Imports //
+// ============================================================================= //
+
+// ========================================== //
+// Import Functions //
+// ========================================== //
 import { loadEnv } from '../shared/env';
 import { Message, LLM } from '../shared';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Utility Functions
-// ─────────────────────────────────────────────────────────────────────────────
+// ============================================================================= //
+// Memory Manipulation SubFunctions
+// ============================================================================= //
 
-/**
- * Extracts a code block from an LLM response.
- *
- * LLMs often wrap code in markdown code blocks like:
- * ```typescript
- * function foo() { ... }
- * ```
- *
- * This function extracts just the code content.
- *
- * @param response - The full LLM response
- * @param language - Optional language hint (e.g., 'typescript', 'python')
- * @returns The extracted code, or the original response if no code block found
- */
-export function extractCodeBlock(response: string, language = 'typescript'): string {
-  // If no code blocks, return as-is
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Define a normal function that seperates string with markdown codeblock // 
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+export function extractCodeBlock(
+
+  // key = reponse, value = string //
+  response: string, 
+
+  // key = language, default value = typescript (if language isnt deifned) //
+  language = 'typescript')
+
+  // Ouptut is a string //
+  : string {
+
+    // ────────────────────────────────────────── //
+  // If there isnt a reponse that includes markdown (```this triggers markdown text) //
+  // ────────────────────────────────────────── //
   if (!response.includes('```')) {
+
+    // return the response //
     return response;
   }
 
-  // Find the first code block
+  // Define parts as splitting the reponse where markdown is triggered, to seperate string from codeblock //
+/**
+  // example 
+const text = "hello```code```world";
+const parts = text.split("```"); 
+// 
+[
+  "hello",
+  "code",
+  "world"
+]
+   */
   const parts = response.split('```');
 
+  // ────────────────────────────────────────── //
+  // if there are less than 2 bullet points //
+  // ────────────────────────────────────────── //
   if (parts.length < 2) {
+
+    // return reponse //
     return response;
   }
 
-  // The code is in parts[1], potentially prefixed with language
+  // Define code as the 2nd part of the array //
   let code = parts[1].trim();
 
   // Remove language prefix if present (e.g., "typescript\n" at start)
+
+  // What position is \n in the string? //
   const firstNewline = code.indexOf('\n');
+
+  // ────────────────────────────────────────── //
+  // \n is not index -1 //
+  // ────────────────────────────────────────── //
   if (firstNewline !== -1) {
+
+    // define firstline by taking the string imbetween the 0th position and \n position //
     const firstLine = code.substring(0, firstNewline).toLowerCase();
-    // Check if first line is just a language identifier
+
+    // ────────────────────────────────────────── //
+    // if firstline is a language //
+    // ────────────────────────────────────────── //
     if (firstLine === language || firstLine === 'ts' || firstLine === 'js' ||
         firstLine === 'javascript' || firstLine === 'python' || firstLine === 'py') {
+
+      // Redefine code as everything after the laguage string //
       code = code.substring(firstNewline + 1);
     }
   }
-
+// Return the code without the language defined //
   return code.trim();
 }
 
-/**
- * Wraps code in a markdown code block.
- *
- * @param code - The code to wrap
- * @param language - The language for syntax highlighting
- */
-export function wrapCodeBlock(code: string, language = 'typescript'): string {
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Define a normal function that outputs just the codeblock alone // 
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+export function wrapCodeBlock(
+  
+ // with key = code, value = string - key = langauge, value default to typescript // 
+  code: string, language = 'typescript'): 
+
+// output a string //
+string {
+
+  // return one line of markdown with the language/ncode/n //
   return '```' + language + '\n' + code + '\n```';
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// QuasiAgent Class
-// ─────────────────────────────────────────────────────────────────────────────
+// ============================================================================= //
+// QuasiAgent Skeleton
+// ============================================================================= //
 
-/**
- * A quasi-agent that maintains conversation history with control over
- * what gets stored.
- *
- * Key concept: We can **manipulate the memory** to guide the LLM's behavior.
- * By controlling what the assistant "sees" as its previous responses,
- * we influence how it continues the conversation.
- *
- * This is NOT a full agent because it:
- * - Doesn't parse responses for tool calls
- * - Doesn't execute actions in an environment
- * - Doesn't make autonomous decisions
- *
- * But it IS a stepping stone because it:
- * - Maintains conversation context
- * - Can chain multiple prompts together
- * - Demonstrates memory manipulation techniques
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// Define a class called QuasiAgent, that is made to store chat history with... //
+// ─────────────────────────────────────────────────────────────────────────────
 export class QuasiAgent {
+
+  // non-editable key = history, value = Message function (default to empty array) //
   private readonly history: Message[] = [];
+
+   // non-editable key = llm, value = LLM object //
   private readonly llm: LLM;
+
+    // non-editable key = systemprompt, value = string //
   private readonly systemPrompt: string;
 
+// ─────────────────────────────────────────────────────────────────────────────
+  // Settings //
+// ─────────────────────────────────────────────────────────────────────────────
   constructor(
+
+    // systemprompt value needs to be a string //
     systemPrompt: string,
-    llmConfig?: { model?: string; debug?: boolean }
+
+    // An optional key = llmConfig, value = an object with... //
+    llmConfig?: { 
+
+      // optional key = model, value = string  //
+      model?: string; 
+
+      // optioanl key = debug, value = boolean //
+      debug?: boolean 
+    }
+
   ) {
+
+    // llm creates a new llm using llmConfig object //
     this.llm = new LLM(llmConfig);
+
+    // systemprompt stays as a string //
     this.systemPrompt = systemPrompt;
+
+    // history pushes the object outputed by the Message/system function, which uses this files system string, to the end of the current message array //
     this.history.push(Message.system(systemPrompt));
   }
 
@@ -121,84 +193,134 @@ export class QuasiAgent {
    * This adds both the user message and the raw assistant response
    * to the conversation history.
    */
-  async chat(userMessage: string): Promise<string> {
+
+// ============================================================================= //
+// Chat subFunctions
+// ============================================================================= //
+
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+  // Async function that generates a chat using history with parameters key = userMessage, value = string //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+  async chat(userMessage: string)
+  
+  // output has to equal a string //
+  : Promise<string> {
+
+    // push the object outputed by Message/user function, using this files system userMessage, to the end of the current message array //
     this.history.push(Message.user(userMessage));
+
+    // Define reponse as the string outputed by the newly created LLM, using all the messages in the current LLM //
     const response = await this.llm.generate(this.history);
+
+    // Push the object outputed by Message/assistant function, using all the messages in the current LLM //
     this.history.push(Message.assistant(response));
+
+    // Rteunr the updated response //
     return response;
   }
 
-  /**
-   * Sends a message but stores a MODIFIED version of the response in history.
-   *
-   * This is a key technique! By controlling what gets stored as the
-   * "assistant's response", we can:
-   * - Strip out commentary and keep only code
-   * - Make the LLM think it always outputs in a consistent format
-   * - Guide subsequent responses based on a cleaned-up version
-   *
-   * @param userMessage - The message to send
-   * @param transformResponse - Function to transform the response before storing
-   * @returns The original (untransformed) response
-   */
+ // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+  // Async function that generates chat using history AND updates the assitants memory for cleaner reponses with parameters... //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   async chatWithMemoryManipulation(
+
+     // key = userMessage, value = string //
     userMessage: string,
-    transformResponse: (response: string) => string
-  ): Promise<string> {
+
+     // key = transformReponse, value = a function that... //
+    transformResponse: 
+
+         // parses key = reponse, value = string. and then outputs a string //
+    (response: string) => string )
+  
+  // Async function Outputting a string //
+  : Promise<string> {
+
+    // Push the object outputed by Message/user function, using the current userMessage string //
+    // This is the users request //
     this.history.push(Message.user(userMessage));
 
+  // ========================================== //
+  // What the user will see //
+  // ========================================== //
+
+// Define reponse as the outputted string from the LLM/generate function, using the users newly requested message // 
     const response = await this.llm.generate(this.history);
 
     // Store the TRANSFORMED version in history
     // This is the key memory manipulation technique!
+
+    // ========================================== //
+    // What the AI will see //
+    // ========================================== // 
+
+    // Dismantle the repsponse using the codeBlock functions, so the assistant only sees the codeblock, not the whole message //
+    // Transform the response into a string //
     const transformedResponse = transformResponse(response);
+
+    // Push the object outputed by Message/asisstant function, using the transformed string //
+    // To clarify, this deifnition doesnt send the message to the user, it just updates what the asistants response on the backend//
     this.history.push(Message.assistant(transformedResponse));
 
-    // Return the original for the caller to see
+    // Return the original for the user to see //
     return response;
   }
 
-  /**
-   * Gets the conversation history.
-   */
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+  // Define a function called getHistory, which outputs the whole LLM chat in a message array //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   getHistory(): readonly Message[] {
+
+    // return the whole chat message //
     return this.history;
   }
 
-  /**
-   * Clears history except for the system prompt.
-   */
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+  // Define a function that resets the messages in the llm chat //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   reset(): void {
+
+    // Redefine message chat with 0 messages ( Clear the history array) //
     this.history.length = 0;
+
+    // Push the outputed object generated by Messae/system function, that uses the original system prompt defined at the start of the class (to reset the system) //
     this.history.push(Message.system(this.systemPrompt));
   }
 
-  /**
-   * Returns the number of turns (user messages) in the conversation.
-   */
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+  // Define a a variable that outputs the number of user requests //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   get turnCount(): number {
-    return this.history.filter(m => m.role === 'user').length;
+
+    // Map through the chats messages with m as each message //
+    return this.history.filter(m => 
+      
+      // return all user request messages //
+      m.role === 'user')
+      
+      // Count how many messages the user requested //
+      .length;
   }
 }
+// ============================================================================= //
+// The LLM Function
+// ============================================================================= //
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Iterative Function Builder
+// An interface that presents a string of all interface messages, and a string of all memory messages //
 // ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Result from the function development pipeline.
- */
 export interface FunctionDevelopmentResult {
-  /** The initial function code */
+
+  // key = initialFunction, vlaue = string (interface messages) //
   initialFunction: string;
 
-  /** Function with documentation added */
+  // key = documentedFunction, vlaue = string (memory messages) //
   documentedFunction: string;
 
-  /** Test cases for the function */
+  // key = testCases, vlaue = string //
   testCases: string;
 
-  /** Suggested filename */
+ // key = filename, vlaue = string //
   filename: string;
 }
 
@@ -217,43 +339,84 @@ export interface FunctionDevelopmentResult {
  * @param verbose - If true, prints progress
  * @returns The developed function, documentation, and tests
  */
+
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// an async function with parameters... //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 export async function developFunction(
+
+  // key = description, value = string // 
   description: string,
+
+  // key = verboose, vlaue = boolean that starts true //
   verbose = true
+
+  // The output must be the interface object //
 ): Promise<FunctionDevelopmentResult> {
+
+  // define agent as a new QuasiAgent with... //
   const agent = new QuasiAgent(
+
+    // the systemprompt as the following string //
     'You are a TypeScript expert helping to develop a function. ' +
     'Always output code in ```typescript code blocks.'
   );
 
-  const log = (msg: string) => verbose && console.log(msg);
+  // define log with parameters key = msg, value = string //
+  const log = (msg: string) => 
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Step 1: Generate Initial Function
-  // ───────────────────────────────────────────────────────────────────────────
+    // Output the verbose boolean and log the msg string //
+    verbose && console.log(msg);
 
+  // ========================================== //
+  // STEP 1 geenrate initial function //
+  // ========================================== //
   log('\n📝 Step 1: Generating initial function...');
 
+  // define step 1 response as the LLMs response that uses... //
   const step1Response = await agent.chatWithMemoryManipulation(
+
+// key = userMessage, value = the following string //
     `Write a TypeScript function that ${description}. ` +
     'Output the function in a ```typescript code block.',
 
-    // Memory manipulation: Store ONLY the code block
-    // This makes the LLM think it always outputs just code
-    (response) => wrapCodeBlock(extractCodeBlock(response))
+    // .......................................... //
+    // Seperate the codeblock and store in ai memory //
+    // .......................................... //
+
+    // key = trasnfromResponse, value = the wrapcodeblock output, with parameter LLM response... // 
+    (response) => 
+      
+      // the function wrapcodeblock, that used... // 
+      wrapCodeBlock 
+      
+      // the result of function extracodeblock that used the LLMs response //
+      (extractCodeBlock(response))
+  
   );
 
+ // .......................................... //
+    // Label the codeblock in a variable to be used throughout the project //
+    // .......................................... //
+
+  // Define initialfunction as the codeblock //
   const initialFunction = extractCodeBlock(step1Response);
+
+  // log the following string... //
   log('\n=== Initial Function ===');
+
+  // along with the codeblock //
   log(initialFunction);
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Step 2: Add Documentation
-  // ───────────────────────────────────────────────────────────────────────────
-
+// ========================================== //
+  // STEP 2 add documentation // 
+  // ========================================== //
   log('\n📝 Step 2: Adding documentation...');
 
+// Define step2 as the next agent response that includes... //
   const step2Response = await agent.chatWithMemoryManipulation(
+
+    // key = userMessage, value = the following string... //
     'Add comprehensive JSDoc documentation to this function, including:\n' +
     '- Description of what it does\n' +
     '- @param tags for each parameter\n' +
@@ -262,21 +425,35 @@ export async function developFunction(
     '- @throws for any error conditions\n' +
     'Output the documented function in a ```typescript code block.',
 
-    // Again, store only the code block
+ // .......................................... //
+    // Seperate the codeblock and store in ai memory //
+   // .......................................... //
+
     (response) => wrapCodeBlock(extractCodeBlock(response))
   );
 
+// .......................................... //
+    // Label the codeblock in a variable to be used throughout the project //
+// .......................................... //
+
+  // Define documentedfucntion as the codeblock //
   const documentedFunction = extractCodeBlock(step2Response);
+
+    // log the following string... //
   log('\n=== Documented Function ===');
+
+    // log the codebblock //
   log(documentedFunction);
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Step 3: Generate Test Cases
-  // ───────────────────────────────────────────────────────────────────────────
-
+  // ========================================== //
+    // STEP 3 Generate Test Cases// 
+    // ========================================== //
   log('\n📝 Step 3: Generating test cases...');
 
+  // Define step3 as the next agent response that includes... //
   const step3Response = await agent.chatWithMemoryManipulation(
+
+    // key = userMessage, value = the following string... //
     'Write Jest test cases for this function, including tests for:\n' +
     '- Basic functionality (happy path)\n' +
     '- Edge cases (empty inputs, boundaries)\n' +
@@ -284,24 +461,48 @@ export async function developFunction(
     '- Various input scenarios\n' +
     'Output the tests in a ```typescript code block.',
 
+      // .......................................... //
+    // Seperate the codeblock and store in ai memory //
+    // .......................................... //
     (response) => wrapCodeBlock(extractCodeBlock(response))
   );
 
+    // .......................................... //
+    // Label the codeblock in a variable to be used throughout the project //
+// .......................................... //
   const testCases = extractCodeBlock(step3Response);
+
+  // log the following string... //
   log('\n=== Test Cases ===');
+
+   // log the codebblock //
   log(testCases);
 
-  // ───────────────────────────────────────────────────────────────────────────
+  // ========================================== //
   // Generate filename from description
-  // ───────────────────────────────────────────────────────────────────────────
+  // ========================================== //
 
+  // filename is a clean/refined version of description //
+  // Define filename as the description key in the primary function //
   const filename = description
+
+  // sets it to lowercase //
     .toLowerCase()
+
+    // remove anything that looks like /[^a-z0-9\s]/g //
     .replace(/[^a-z0-9\s]/g, '')
+
+    // removes irrelevant spaces //
     .trim()
+
+    // remove anyting that looks like /\s+/g, with - //
     .replace(/\s+/g, '-')
+
+    // Takes the first 30 letters of the string, and adds .ts on the end //
     .substring(0, 30) + '.ts';
 
+
+    // return the functiondevelopmentresult string //
   return {
     initialFunction,
     documentedFunction,
@@ -310,30 +511,41 @@ export async function developFunction(
   };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Demo Functions
-// ─────────────────────────────────────────────────────────────────────────────
+// ============================================================================= //
+// Backend Functions
+// ============================================================================= //
 
 /**
  * Demonstrates the iterative function builder with a predefined example.
  */
+
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// an async function that fully uses the Quasi-Agent //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 async function demonstrateFunctionBuilder(): Promise<void> {
+
+  // ========================================== //
+  // Title Module 1 //
+  // ========================================== //
   console.log('='.repeat(60));
   console.log('Module 1: Quasi-Agent - Iterative Function Builder');
   console.log('='.repeat(60));
-
   console.log('\nThis demo shows how a quasi-agent can guide function development');
   console.log('through multiple refinement steps using prompt chaining.\n');
 
+  // Describe the agents role //
   const description = 'calculates the factorial of a number';
-
   console.log(`📋 Function description: "${description}"`);
 
+  // Use the primary function applyng the defined description //
   const result = await developFunction(description);
 
+  // Return the result //
   console.log('\n' + '='.repeat(60));
   console.log('Final Result');
   console.log('='.repeat(60));
+
+  // the clean description version //
   console.log(`\n📁 Suggested filename: ${result.filename}`);
   console.log('\nThe function went through 3 refinement steps:');
   console.log('1. Initial implementation');
@@ -344,42 +556,85 @@ async function demonstrateFunctionBuilder(): Promise<void> {
 /**
  * Demonstrates the difference between using memory and not using memory.
  */
+
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// an async function that applys a function without memory //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 async function demonstrateMemoryImportance(): Promise<void> {
+  
+  // ========================================== //
+  // Title Memory Importance Demo //
+  // ========================================== //
   console.log('\n' + '='.repeat(60));
   console.log('Memory Importance Demo');
   console.log('='.repeat(60));
 
+  // Create a new default LLM //
   const llm = new LLM();
 
-  // Without memory - each call is independent
   console.log('\n❌ WITHOUT MEMORY:');
 
+  // ========================================== //
+  // Message 1 //
+  // ========================================== //
   console.log('\n👤 Message 1: "My favorite color is blue."');
+
+  // Generate a response using... //
   await llm.generate([
+
+    // this string as the system... //
     Message.system('You are a helpful assistant.'),
+
+    // this string as the user request... //
     Message.user('My favorite color is blue.'),
   ]);
   console.log('(Response received but not stored)');
 
+  // ========================================== //
+  // Message 2 //
+  // ========================================== //
   console.log('\n👤 Message 2: "What is my favorite color?"');
+
+  // Define noMemoryresponse as the current llm... //
   const noMemoryResponse = await llm.generate([
+
+    // with the same sysetm.... //
     Message.system('You are a helpful assistant.'),
+
+    // with a different user request... //
     Message.user('What is my favorite color?'),
   ]);
+
+  // Return the first 200 letters of the llm response //
   console.log(`🤖 Response: ${noMemoryResponse.substring(0, 200)}...`);
   console.log('\n⚠️  The LLM cannot remember without conversation history!');
 
-  // With memory - using QuasiAgent
+  // ========================================== //
+  // Title With Memory (QuasiAgent) //
+  // ========================================== //
   console.log('\n' + '-'.repeat(40));
   console.log('\n✅ WITH MEMORY (QuasiAgent):');
 
+  // Create a new memory llm //
   const agent = new QuasiAgent('You are a helpful assistant.');
 
+  // ========================================== //
+  // Message 1 //
+  // ========================================== //
   console.log('\n👤 Message 1: "My favorite color is blue."');
+
+  // use the chat function with the following string is the user request //
   await agent.chat('My favorite color is blue.');
 
+  // ========================================== //
+  // Message 2 //
+  // ========================================== //
   console.log('\n👤 Message 2: "What is my favorite color?"');
+
+  // use the chat fucntion ont he same llm, with a different user request //
   const withMemoryResponse = await agent.chat('What is my favorite color?');
+
+  // Return the llm response //
   console.log(`🤖 Response: ${withMemoryResponse}`);
   console.log('\n✅ The QuasiAgent remembered the previous message!');
 }
@@ -387,28 +642,48 @@ async function demonstrateMemoryImportance(): Promise<void> {
 /**
  * Demonstrates memory manipulation technique.
  */
+
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// an async function that applys a function with memory and memory manipulation //
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 async function demonstrateMemoryManipulation(): Promise<void> {
+
+  // ========================================== //
+  // Title Memory Manipulation Demo //
+  // ========================================== //
   console.log('\n' + '='.repeat(60));
   console.log('Memory Manipulation Demo');
   console.log('='.repeat(60));
-
   console.log('\nMemory manipulation lets us control what the LLM "sees"');
   console.log('as its previous responses, guiding its behavior.\n');
 
+  // Create a new memory llm with the systemprompt... //
   const agent = new QuasiAgent(
     'You are a code generator. Output code in markdown code blocks.'
   );
 
-  // Ask for a function
+  // Use the chatwithmemoryfunction with... //
   await agent.chatWithMemoryManipulation(
+
+    // the userMessage as the following string... //
     'Write a simple hello world function in TypeScript.',
 
-    // Transform: Only store the code block, not any explanation
+    // the transformResponse with resp as the input //
     (resp) => {
+
+      // define code as extracodeblock function using the resp string //
+      // this seperates the code from the string message //
       const code = extractCodeBlock(resp);
+
       console.log('\n📝 Original response had explanation + code');
       console.log('📝 But we store ONLY the code block in memory:\n');
+
+      // use the wrapcodeblock function applying code (which is both the string and the code) //
+      // this is saying "memorise just the code"
+      // Return just the code //
       console.log(wrapCodeBlock(code));
+
+      // Return just the code //
       return wrapCodeBlock(code);
     }
   );
@@ -421,24 +696,34 @@ async function demonstrateMemoryManipulation(): Promise<void> {
   console.log('\n' + '-'.repeat(40));
   console.log('\n👤 Follow-up: "Add a parameter to accept a name"');
 
+  // define followUp as the same llm with a new user Request //
   const followUp = await agent.chatWithMemoryManipulation(
     'Add a parameter to accept a name.',
+
+    // Memorise just the code from the llm response  //
     (response) => wrapCodeBlock(extractCodeBlock(response))
   );
 
+  // Return just the code //
   console.log('\n🤖 Response (extracted code):');
   console.log(extractCodeBlock(followUp));
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Main Entry Point
-// ─────────────────────────────────────────────────────────────────────────────
+// ============================================================================= //
+// Frontend Function 
+// ============================================================================= //
 
+  // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+  // An async function that Runs all functions defined above //
+  // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 async function main(): Promise<void> {
+
+  // Trigger the env file //
   loadEnv();
 
+// ────────────────────────────────────────── //
   try {
-    // Run all demos
+    // Run all the demos //
     await demonstrateMemoryImportance();
     await demonstrateMemoryManipulation();
     await demonstrateFunctionBuilder();
@@ -452,13 +737,20 @@ async function main(): Promise<void> {
     console.log('2. Prompt chaining lets us build complex outputs step-by-step');
     console.log('3. Memory manipulation gives us control over LLM behavior');
     console.log('4. These techniques are the foundation for full agents');
-  } catch (error) {
+  } 
+  
+  // ────────────────────────────────────────── //
+  catch (error) {
     console.error('Error:', error);
     process.exit(1);
   }
 }
 
-// Run if executed directly
+// ────────────────────────────────────────── //
+// if the main function is in thhe current file //
+// ────────────────────────────────────────── //
 if (require.main === module) {
+
+  // Trigger main function//
   main();
 }
