@@ -142,7 +142,7 @@ async function toolSelection(): Promise<void> {
   // Create new chat //
   const llm = new LLM();
 
-  // deine tools //
+  // define tools //
   const tools = [
     Tool.listFiles('Lists all files in the current directory'),
     Tool.readFile('Reads the contents of a specific file'),
@@ -180,7 +180,7 @@ async function toolSelection(): Promise<void> {
       [
         Message.system('You are a file assistant. Use the appropriate tool for each request.'),
 
-        // it generates 3 responses due to there being 3 requetss in the user request array //
+        // it generates 3 responses due to there being 3 requets in the user request array //
         Message.user(request),
       ],
 

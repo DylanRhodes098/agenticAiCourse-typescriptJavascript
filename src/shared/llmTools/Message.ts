@@ -96,11 +96,8 @@ export class Message {
 // a string converter function that returns a string //
   // ########################################################################### //
   toString(): string {
-
-    // Define the strong format with the key being role //
-    return `[${this.role}]: 
-
-    // and the value being content // 
-    ${this.content.substring(0, 50)}${this.content.length > 50 ? '...' : ''}`;
+    const preview = this.content.substring(0, 50);
+    const ellipsis = this.content.length > 50 ? '...' : '';
+    return `[${this.role}]: ${preview}${ellipsis}`;
   }
 }

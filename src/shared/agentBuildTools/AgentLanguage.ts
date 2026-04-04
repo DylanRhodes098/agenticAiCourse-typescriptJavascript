@@ -29,10 +29,10 @@
  * ```
  */
 
-import { Message } from './Message';
-import { Prompt } from './Prompt';
-import { Tool } from './Tool';
-import { ConversationMemory } from './ConversationMemory';
+import { Message } from '../llmTools/Message';
+import { Prompt } from '../llmTools/Prompt';
+import { Tool } from '../llmTools/Tool';
+import { ConversationMemory } from '../llmTools/ConversationMemory';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types

@@ -34,11 +34,11 @@
  * ```
  */
 
-import { Prompt } from './Prompt';
-import { ConversationMemory } from './ConversationMemory';
-import { ToolRegistry } from './ToolRegistry';
-import { Environment, ActionResultEnvelope } from './Environment';
-import { AgentLanguage, Goal, ParsedAction } from './AgentLanguage';
+import { Prompt } from '../llmTools/Prompt';
+import { ConversationMemory } from '../llmTools/ConversationMemory';
+import { ToolRegistry } from '../agentBuildTools/ToolRegistry';
+import { Environment, ActionResultEnvelope } from '../agentBuildTools/Environment';
+import { AgentLanguage, Goal, ParsedAction } from '../agentBuildTools/AgentLanguage';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types

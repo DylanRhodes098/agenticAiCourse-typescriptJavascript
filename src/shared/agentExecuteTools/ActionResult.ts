@@ -26,6 +26,10 @@
 
 // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
 
+   // ============================================================================= //
+  // Action result skeleton
+  // ============================================================================= //
+
 // ─────────────────────────────────────────────────────────────────────────────
 // an object that geenrates a success message
 // ─────────────────────────────────────────────────────────────────────────────
@@ -41,6 +45,10 @@ interface ErrorResult {
   readonly success: false;
   readonly error: string;
 }
+
+   // ============================================================================= //
+  // SubFunctions
+  // ============================================================================= //
 
 // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 // A function that outputs successresult or errorresult using T defined as unknown //
@@ -79,6 +87,10 @@ export const ActionResult = {
     return { success: false, error };
   },
 
+   // ============================================================================= //
+  // Catch functions
+  // ============================================================================= //
+
   /**
    * Wraps a Promise into an ActionResult.
    * Catches any errors and converts them to error results.
@@ -98,16 +110,16 @@ export const ActionResult = {
    */
 
   // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
-// async function called fromPromise and T //
+// async function that catches any erorrs //
 // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 // This stops bugs, catches anything that isnt recognised as success or error //
   async fromPromise<T>
   
   // Inputs T //
-  (promise: Promise<T>): 
-  
+  (promise: Promise<T>)
+
   // Outputs success or error //
-  Promise<ActionResult<T>> {
+  : Promise<ActionResult<T>> {
 
     try {
 
@@ -131,36 +143,51 @@ export const ActionResult = {
    */
 
 // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
-// 
+// A syncournous function that uses a predefined funciton to output T //
 // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
-  fromTry<T>(fn: () => T): ActionResult<T> {
+// the input is a function that outputs T // 
+  fromTry<T>(fn: () => T): 
+  
+  // The output is eiehr success or error message //
+  ActionResult<T> {
+
     try {
+
+      // value is the funciton that outputs T //
       const value = fn();
+
+      // return a true boolean followed by T //
       return { success: true, value };
+
+      // Catches if theres an error //
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return { success: false, error: message };
     }
   },
 
-  /**
-   * Checks if a result is successful (type guard).
-   */
+
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// checks if a result is successful
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   isSuccess<T>(result: ActionResult<T>): result is SuccessResult<T> {
     return result.success;
   },
 
-  /**
-   * Checks if a result is an error (type guard).
-   */
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// checks if a result is error
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   isError<T>(result: ActionResult<T>): result is ErrorResult {
     return !result.success;
   },
 
-  /**
-   * Converts an ActionResult to a plain object for JSON serialization.
-   * Format: { result: value } or { error: message }
-   */
+   // ============================================================================= //
+  // Serialization
+  // ============================================================================= //
+
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
+// Converts reslt into usable json.
+// _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
   toJSON<T>(result: ActionResult<T>): { result: T } | { error: string } {
     if (result.success) {
       return { result: result.value };

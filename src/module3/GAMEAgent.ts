@@ -32,7 +32,7 @@ import { LLM } from '../shared';
 import {
   Agent,
   AgentBuilder,
-} from '../shared/Agent';
+} from '../shared/agentExecuteTools/Agent';
 import {
   AgentLanguage,
   Goal,
@@ -40,11 +40,11 @@ import {
   JsonActionLanguage,
   FunctionCallingLanguage,
   createGoal,
-} from '../shared/AgentLanguage';
-import { ConversationMemory } from '../shared/ConversationMemory';
-import { Environment } from '../shared/Environment';
-import { ToolRegistry } from '../shared/ToolRegistry';
-import { defineTool, clearGlobalRegistry } from '../shared/defineTool';
+} from '../shared/agentBuildTools/AgentLanguage';
+import { ConversationMemory } from '../shared/llmTools/ConversationMemory';
+import { Environment } from '../shared/agentBuildTools/Environment';
+import { ToolRegistry } from '../shared/agentBuildTools/ToolRegistry';
+import { defineTool, clearGlobalRegistry } from '../shared/toolBox/defineTool';
 import { z } from 'zod';
 
 // ─────────────────────────────────────────────────────────────────────────────

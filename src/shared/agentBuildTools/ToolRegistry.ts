@@ -1,3 +1,5 @@
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
 /**
  * Tag-Based Tool Registry
  *
@@ -26,11 +28,13 @@
  * ```
  */
 
-import { Tool } from './Tool';
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
+
+import { Tool } from '../llmTools/Tool';
 import {
   RegisteredTool,
   getAllGlobalTools,
-} from './defineTool';
+} from '../toolBox/defineTool';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types

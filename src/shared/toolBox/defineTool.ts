@@ -31,7 +31,7 @@
 
 import { z, ZodObject } from 'zod';
 import zodToJsonSchema from 'zod-to-json-schema';
-import { Tool, ToolParameters } from './Tool';
+import { Tool, ToolParameters } from '../llmTools/Tool';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types

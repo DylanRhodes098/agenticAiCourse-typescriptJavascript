@@ -38,13 +38,12 @@ export type ToolArgs = Record<string, unknown>;
 // The action with the tool name and the materials //
 // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 export class Action {
-  /**
-   * Creates a new Action.
-   * @param toolName - The name of the tool to invoke
-   * @param args - Arguments to pass to the tool
-   */
+
   constructor(
+    // toolName - The name of the tool to invoke //
     public readonly toolName: string,
+
+    // args - Arguments (or materials) to pass to the tool //
     public readonly args: ToolArgs = {}
   ) {}
 
@@ -80,12 +79,15 @@ export class Action {
 // Get the arguemnt / material in a desired tool, if there is one //
 // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 // A function where the output is T, with parameter name : string and... // 
+// name - The argument name //
   getArg<T>(name: string, 
 
     // a function with parameters value : unkown, where value is T... //
+    // its an optional runtime validator, if you 100% know the data type output //
     validator?: (value: unknown) => value is T)
 
     // The output is a boolean either T or undefined //
+    // the argument value //
     : T | undefined {
       
       // define value as the name value in the args object //
@@ -113,11 +115,19 @@ export class Action {
     // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
 // Get the arguemnt / material in a desired tool, but there has to be one //
 // _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- //
-  requireArg<T>(name: string, validator?: (value: unknown) => value is T): T 
+// arguent name is a string //
+  requireArg<T>(name: string, 
+    
+    // optional validator has to be T //
+    validator?: (value: unknown) => value is T)
+    
+    // Output has to be T //
+    : T 
   
   {
 
     // define value as the name and validator in getArg value //
+    // get the name and value of the argument. 
     const value = this.getArg<T>(name, validator);
 
         // if value is undefined //

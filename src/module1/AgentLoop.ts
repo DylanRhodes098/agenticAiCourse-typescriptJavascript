@@ -62,7 +62,7 @@
 // ========================================== //
 import { loadEnv } from '../shared/env';
 import { Message, LLM } from '../shared';
-import { ConversationMemory } from '../shared/ConversationMemory';
+import { ConversationMemory } from '../shared/llmTools/ConversationMemory';
 
 // ============================================================================= //
 // Action Objects

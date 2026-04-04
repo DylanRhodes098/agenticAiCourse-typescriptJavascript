@@ -10,19 +10,19 @@
  */
 
 // Core types
-export { Message, Role } from './Message';
-export { Action, ToolArgs } from './Action';
-export { ActionResult } from './ActionResult';
-export { Tool, ToolParameters } from './Tool';
-export { Prompt, PromptMetadata } from './Prompt';
-export { Memory } from './Memory';
+export { Message, Role } from './llmTools/Message';
+export { Action, ToolArgs } from './agentExecuteTools/Action';
+export { ActionResult } from './agentExecuteTools/ActionResult';
+export { Tool, ToolParameters } from './llmTools/Tool';
+export { Prompt, PromptMetadata } from './llmTools/Prompt';
+export { Memory } from './llmTools/Memory';
 export { Goal } from './Goal';
-export { LLM, LLMConfig, ToolCallResponse } from './LLM';
-export { FileTools } from './FileTools';
+export { LLM, LLMConfig, ToolCallResponse } from './llmTools/LLM';
+export { FileTools } from './agentExecuteTools/FileTools';
 
 // New GAME framework components
-export { ConversationMemory, MemoryItem, MemoryItemType } from './ConversationMemory';
-export { Environment, ActionResultEnvelope, EnvironmentConfig } from './Environment';
+export { ConversationMemory, MemoryItem, MemoryItemType } from './llmTools/ConversationMemory';
+export { Environment, ActionResultEnvelope, EnvironmentConfig } from './agentBuildTools/Environment';
 export {
   AgentLanguage,
   NaturalLanguage,
@@ -34,7 +34,7 @@ export {
   ErrorContext,
   createGoal,
   extractCodeBlock,
-} from './AgentLanguage';
+} from './agentBuildTools/AgentLanguage';
 export {
   Agent,
   AgentBuilder,
@@ -43,7 +43,7 @@ export {
   AgentCallbacks,
   GenerateResponseFn,
   createSimpleAgent,
-} from './Agent';
+} from './agentExecuteTools/Agent';
 
 // Zod-based tool definition
 export {
@@ -57,10 +57,10 @@ export {
   listFilesDefinition,
   readFileDefinition,
   terminateDefinition,
-} from './defineTool';
+} from './toolBox/defineTool';
 export {
   ToolRegistry,
   ToolRegistryOptions,
   createFileOperationsRegistry,
   createFullRegistry,
-} from './ToolRegistry';
+} from './agentBuildTools/ToolRegistry';

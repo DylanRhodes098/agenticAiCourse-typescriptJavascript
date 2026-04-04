@@ -40,10 +40,10 @@ import {
   defineTool,
   getAllGlobalTools,
   getToolNamesByTag,
-} from '../shared/defineTool';
-import { ToolRegistry } from '../shared/ToolRegistry';
-import { AgentBuilder } from '../shared/Agent';
-import { FunctionCallingLanguage } from '../shared/AgentLanguage';
+} from '../shared/toolBox/defineTool';
+import { ToolRegistry } from '../shared/agentBuildTools/ToolRegistry';
+import { AgentBuilder } from '../shared/agentExecuteTools/Agent';
+import { FunctionCallingLanguage } from '../shared/agentBuildTools/AgentLanguage';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tool Definitions Using Zod
@@ -426,6 +426,6 @@ export {
 };
 
 // Re-export core utilities for convenience
-export { defineTool } from '../shared/defineTool';
-export { ToolRegistry } from '../shared/ToolRegistry';
-export type { RegisteredTool, ToolDefinition } from '../shared/defineTool';
+export { defineTool } from '../shared/toolBox/defineTool';
+export { ToolRegistry } from '../shared/agentBuildTools/ToolRegistry';
+export type { RegisteredTool, ToolDefinition } from '../shared/toolBox/defineTool';
